@@ -1,0 +1,84 @@
+Sub CompareAndExtractAllMatches()
+    Dim wb1 As Workbook, wb2 As Workbook
+    Dim ws1 As Worksheet, ws2 As Worksheet, wsResult As Worksheet
+    Dim lastRow1 As Long, lastRow2 As Long
+    Dim resultRow As Long
+    Dim filePath1 As String
+    Dim i As Long, j As Long
+    
+        ' Select files
+    file1Path = Application.GetOpenFilename("Excel Files (*.xls; *.xlsx; *.xlsm), *.xls; *.xlsx; *.xlsm", , "SELECT QryTemp")
+    If file1Path = "False" Then Exit Sub
+    file2Path = Application.GetOpenFilename("Excel Files (*.xls; *.xlsx; *.xlsm), *.xls; *.xlsx; *.xlsm", , "SELECT COMP1")
+    If file2Path = "False" Then Exit Sub
+    
+    ' Open files
+    Application.DisplayAlerts = False
+    Set wb1 = Workbooks.Open(file1Path, ReadOnly:=True)
+    Set ws1 = wb1.Sheets(1)
+    Set wb2 = Workbooks.Open(file2Path)
+
+    Set ws2 = wb2.Sheets(1) ' Sheet d? li?u c?n so sánh
+
+    ' T?o ho?c làm m?i sheet "Result"
+    On Error Resume Next
+    Set wsResult = wb2.Sheets("Result")
+    If wsResult Is Nothing Then
+        Set wsResult = wb2.Sheets.Add(After:=wb2.Sheets(wb2.Sheets.Count))
+        wsResult.Name = "Result"
+    Else
+        wsResult.Cells.Clear
+    End If
+    On Error GoTo 0
+
+    ' Tiêu ð?
+    wsResult.Range("A1:J1").value = Array("E", "F", "H", "I", "P", "Q", "S", "U", "Y", "Z")
+    resultRow = 2
+
+    lastRow2 = ws2.Cells(ws2.Rows.Count, "E").End(xlUp).Row
+    lastRow1 = ws1.Cells(ws1.Rows.Count, "Q").End(xlUp).Row
+
+    ' Duy?t t?ng d?ng ? File 2
+    
+    For Each ws2 In wb2.Sheets
+        If Not ws2 Is Nothing Then
+            If ws2.Range("B1").value = "Component BOM Review Sheet" Then
+                lastRow2 = ws2.Cells(ws2.Rows.Count, "E").End(xlUp).Row
+                
+                Dim startRow As Long
+                startRow = 41
+                Do While ws2.Cells(startRow, "E").value = "" And startRow < lastRow2
+                    startRow = startRow + 1
+                Loop
+                
+                For i = startRow To lastRow2
+                    Dim valueToCompare As Variant
+                    valueToCompare = ws2.Cells(i, "E").value
+            
+                    ' Duy?t toàn b? c?t Q ? File 1 ð? t?m t?t c? d?ng kh?p
+                    For j = 2 To lastRow1
+                        If ws1.Cells(j, "Q").value = valueToCompare Then
+                            ' Ghi d? li?u vào sheet Result
+                            wsResult.Cells(resultRow, "A").value = ws2.Cells(i, "E").value
+                            wsResult.Cells(resultRow, "B").value = ws2.Cells(i, "F").value
+                            wsResult.Cells(resultRow, "C").value = ws2.Cells(i, "H").value
+                            wsResult.Cells(resultRow, "D").value = ws2.Cells(i, "I").value
+            
+                            wsResult.Cells(resultRow, "E").value = ws1.Cells(j, "P").value
+                            wsResult.Cells(resultRow, "F").value = ws1.Cells(j, "Q").value
+                            wsResult.Cells(resultRow, "G").value = ws1.Cells(j, "S").value
+                            wsResult.Cells(resultRow, "H").value = ws1.Cells(j, "U").value
+                            wsResult.Cells(resultRow, "I").value = ws1.Cells(j, "Y").value
+                            wsResult.Cells(resultRow, "J").value = ws1.Cells(j, "Z").value
+            
+                            resultRow = resultRow + 1
+                        End If
+                    Next j
+                Next i
+            End If
+        End If
+    Next ws2
+    
+    MsgBox "Done!", vbInformation
+End Sub
+
