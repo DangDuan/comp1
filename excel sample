@@ -93,7 +93,50 @@ Bangkok / Thailand"	-40 to 85	No	CMOS	0.8um	3.3 or 5V up to 1MBaud	2N	A/B	1	1	1	
 (manuf)_AVX__Coleraine_GB"	-40 to 125	No			CAP 10uF 10% 25V X7R 1206 SOFT TERM	1R		1	1	1	1	1	Yes																		
 	2	C	Capacitor	C1206X106K3RAC3123	KEMET	1206		"(manuf)_KEMET__Monterrey_MX
 (tst)_KEMET__Suzhou_CN"	-40 to 125	No			CAP 10uF 10% 25V X7R 1206 SOFT TERM	1R		1	1	1	1	1	Yes																		
-	3	C	Capacitor	GCJ31CR71E106KA22L	MURATA	1206		(manuf)_MURATA__Izumo_JP	-40 to 125	No			CAP 10uF 10% 25V X7R 1206 SOFT TERM	1R		1	1	1	1	1	Yes																		
+	3	C	Capacitor	GCJ31CR71E106KA22L	MURATA	1206		(manuf)_MURATA__Izumo_JP	-40 to 125	No			CAP 10uF 10% 25V X7R 1206 SOFT TERM	1R		1	1	1	1	1	Yes		
+
+	4	C	Capacitor	CL31B106KAHVPJE	SAMSUNG	1206		"(manuf)_SAMSUNG__Suwon_KR
+(manuf)_SAMSUNG__Busan_KR"	-40 to 125	No			CAP 10uF 10% 25V X7R 1206 SOFT TERM	1R		1	1	1	1	1	Yes																		
+	5	C	Capacitor	C3216X7R1E106KT0Y0S	TDK	1206		"(manuf)_TDK__Suzhou_CN
+(manuf)_TDK__Peachtree_US
+TDK Tokyo/Japan
+TDK-EPC Hong Kong Ltd."	-40 to 125	No			CAP 10uF 10% 25V X7R 1206 SOFT TERM	1R		1	1	1	1	1	Yes																		
+	6	D	Diode	934663623115_/_ BAS321-QX	NEXPERIA	SOD323		"(assy)_NEXPERIA_ATGD_Huangjiang_CN
+(w/f)_ASMC_Fab2_Shanghai_CN
+(w/f)_NEXPERIA_DMAN_HazelGrove_GB
+(w/f)_PHENITEC__Okayama_JP
+(w/f)_VIS_Fab1_Hsinchu_TW
+(w/f)_X-FAB__Kuching_MY
+(w/f)_M-MOS__Hong-Kong_CN
+(w/f)_Wingskysemi_WSS_Shanghai_CN
+(assy)_UTAC_UTL1_Bangkok_TH
+(assy)_NEXPERIA_ATSN_Seremban_MY
+(tst)_NEXPERIA_ATCB_Cabuyao_PH
+(w/f)_NEXPERIA_DHAM-ICH8_Hamburg_DE
+(w/f)_NEXPERIA_DHAM-ICH6_Hamburg_DE
+(assy)_NXP_ATBK_Bangkok_TH
+(assy)_ASEN__Suzhou_CN
+(w/f)_NXP_ICN8_Nijmegen_NL
+(tst)_NXP_ATBK_Bangkok_TH
+(assy)_HANA__Ayutthaya_TH
+(tst)_NEXPERIA_ATSN_Seremban_MY
+(w/f)_MOSEL__Hsinchu_TW
+(w/f)_VIS_Fab3_Taoyuan_TW
+(w/f)_VIS_Fab2_Hsinchu_TW
+(assy)_NEXPERIA_ATCB_Cabuyao_PH
+(assy)_NXP_APM_Seremban_MY
+(tst)_NEXPERIA_ATGD_Huangjiang_CN
+(tst)_ASEN_Suzhou_CN
+(assy)_AMKOR__Muntilupa_PH
+(assy)_TFME__Nantong_CN
+(tst)_TFME__Nantong_CN
+(w/f)_GTA__Shanghai_CN"	-65 to 150	No			DIOD SIGN 250mA 200V	1R		1	1	1	1	1	Yes																		
+	7	D	Diode	NSVBAS21HT1G	ON SEMICONDUCTOR	SOD323		"(w/p)_ONSEMI_ISMF_Seremban_MY
+(w/f)_ONSEMI_ISMF_Seramban_MY
+(w/p)_ONSEMI_SBN-Lot-122_Seremban_MY
+(tst)_ONSEMI_LPS_Leshan_CN
+(assy)_ONSEMI_LPS_Leshan_CN"	-55 to 150	No			DIOD SIGN 250mA 200V 	1R		1	1	1	1	1	Yes																		
+
 																				
 																																							
 																																							
