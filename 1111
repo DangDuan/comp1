@@ -1,0 +1,308 @@
+Function CleanKey(str As Variant) As Variant
+    Dim temp As String
+    temp = Trim(CStr(str))
+    temp = Replace(temp, Chr(160), "")
+    temp = Replace(temp, Chr(32), "")
+    temp = Replace(temp, Chr(9), "")
+    temp = Replace(temp, vbTab, "")
+    temp = Replace(temp, vbCrLf, "")
+    temp = Replace(temp, vbCr, "")
+    temp = Replace(temp, vbLf, "")
+    temp = Replace(temp, "-", "")
+    temp = Replace(temp, "_", "")
+    temp = Replace(temp, ".", "")
+    CleanKey = LCase(temp)
+End Function
+
+Sub CompareAndExtractAllMatches()
+    Dim wb1 As Workbook, wb2 As Workbook
+    Dim ws1 As Worksheet, ws2 As Worksheet, wsLog As Worksheet
+    Dim lastRow1 As Long, lastRow2 As Long
+    Dim logRow As Long
+    Dim file1Path As String, file2Path As String
+    Dim i As Long, j As Long
+    Dim foundMatch As Boolean
+    Dim dict As Object: Set dict = CreateObject("Scripting.Dictionary")
+    Dim userName As String: userName = Environ("Username")
+    
+    Dim ws As Worksheet
+    On Error Resume Next
+    Set ws = ThisWorkbook.Sheets("Tool1")
+    On Error GoTo 0
+    If ws Is Nothing Then
+        MsgBox "Sheet 'Have not sheet Tool1", vbCritical
+        Exit Sub
+    End If
+    userName = ws.Range("D28").value
+
+    Application.ScreenUpdating = False
+    Application.Calculation = xlCalculationManual
+    Application.EnableEvents = False
+
+    'select file
+    file1Path = Application.GetOpenFilename("Excel Files (*.xls; *.xlsx; *.xlsm), *.xls; *.xlsx; *.xlsm", , "SELECT QryTemp")
+    If file1Path = "False" Then GoTo Cleanup
+    file2Path = Application.GetOpenFilename("Excel Files (*.xls; *.xlsx; *.xlsm), *.xls; *.xlsx; *.xlsm", , "SELECT COMP1")
+    If file2Path = "False" Then GoTo Cleanup
+
+    Set wb1 = Workbooks.Open(file1Path, ReadOnly:=True)
+    Set ws1 = wb1.Sheets(1)
+    Set wb2 = Workbooks.Open(file2Path)
+
+    'sheet RESULT
+    On Error Resume Next
+    Set wsLog = wb2.Sheets("RESULT")
+    If wsLog Is Nothing Then
+        Set wsLog = wb2.Sheets.Add(After:=wb2.Sheets(wb2.Sheets.Count))
+        wsLog.Name = "RESULT"
+        wsLog.Range("A1:G1").Merge
+        wsLog.Range("H1:M1").Merge
+        wsLog.Range("A1:M1").HorizontalAlignment = xlCenter
+        wsLog.Range("A1:M1").VerticalAlignment = xlCenter
+        wsLog.Range("A1:G1").Interior.Color = RGB(192, 190, 265)
+        wsLog.Range("H1:M1").Interior.Color = RGB(160, 170, 220)
+        wsLog.Range("A1:G1").value = "COMP1 component list"
+        wsLog.Range("H1:M1").value = "DB component list"
+        wsLog.Range("A2:M2").value = Array("Sheet Name", "Row", "Device category", "Ordering Part Number", "Manufacturer name", "FAB site", "Assy. site", "•”•i–¼ID", "Ordering Part Number", "Manufacturer name", "FAB site", "Assy. site", "Status", "Add Comment")
+        wsLog.Range("A2:M2").Interior.Color = RGB(217, 217, 217)
+        wsLog.Range("A2:M2").HorizontalAlignment = xlCenter
+        wsLog.Range("A2:M2").VerticalAlignment = xlCenter
+        With Union(wsLog.Range("A1:M1"), wsLog.Range("A2:M2")).Borders
+            .LineStyle = xlContinuous
+            .Color = RGB(0, 0, 0)
+            .Weight = xlThin
+        End With
+    End If
+    On Error GoTo 0
+
+    logRow = wsLog.Cells(wsLog.Rows.Count, "A").End(xlUp).Row + 1
+    lastRow1 = ws1.Cells(ws1.Rows.Count, "Q").End(xlUp).Row
+
+    'compare data
+    Dim dbValues As Variant
+    dbValues = ws1.Range("Q2:Q" & lastRow1).value
+
+    Dim cleanedDB() As String
+    ReDim cleanedDB(1 To UBound(dbValues, 1))
+    For j = 1 To UBound(dbValues, 1)
+        cleanedDB(j) = CleanKey(CStr(dbValues(j, 1)))
+        
+    Next j
+
+    For Each ws2 In wb2.Sheets
+        If Not ws2 Is Nothing Then
+            If ws2.Range("B1").value = "Component BOM Review Sheet" Then
+                lastRow2 = ws2.Cells(ws2.Rows.Count, "E").End(xlUp).Row
+                Dim startRow As Long: startRow = 41
+                Do While ws2.Cells(startRow, "E").value = "" And startRow < lastRow2
+                    startRow = startRow + 1
+                Loop
+
+                For i = startRow To lastRow2
+                    Dim key As String
+                    key = CStr(CleanKey(ws2.Cells(i, "E").text))
+                    If key = "" Then GoTo SkipRow
+
+                    foundMatch = False
+
+                    For j = 1 To UBound(cleanedDB)
+                        If key = cleanedDB(j) Then
+                            foundMatch = True
+                            Dim statusValue As String
+                            statusValue = Trim(ws1.Cells(j + 1, "S").value)
+
+                            wsLog.Range("A" & logRow & ":M" & logRow).value = Array( _
+                                ws2.Name, i, ws2.Cells(i, "D").text, ws2.Cells(i, "E").text, ws2.Cells(i, "F").text, _
+                                ws2.Cells(i, "H").text, ws2.Cells(i, "I").text, ws1.Cells(j + 1, "F").value, ws1.Cells(j + 1, "Q").value, _
+                                ws1.Cells(j + 1, "P").value, ws1.Cells(j + 1, "Y").value, ws1.Cells(j + 1, "Z").value, statusValue, "")
+
+                            If statusValue = "" Or LCase(statusValue) = "not use" Then
+                                wsLog.Range("A" & logRow & ":M" & logRow).Interior.Color = RGB(255, 255, 153)
+                            Else
+                                wsLog.Range("A" & logRow & ":M" & logRow).Interior.Color = RGB(204, 255, 204)
+                            End If
+
+                            With wsLog.Range("A" & logRow & ":M" & logRow).Borders
+                                .LineStyle = xlContinuous
+                                .Color = RGB(0, 0, 0)
+                                .Weight = xlThin
+                            End With
+
+                            logRow = logRow + 1
+                        End If
+                    Next j
+
+                    If Not foundMatch Then
+                        wsLog.Range("A" & logRow & ":M" & logRow).value = Array( _
+                            ws2.Name, i, ws2.Cells(i, "D").text, ws2.Cells(i, "E").text, ws2.Cells(i, "F").text, _
+                            ws2.Cells(i, "H").text, ws2.Cells(i, "I").text, "", "", "", "", "", "Had not information", "")
+
+                        wsLog.Range("A" & logRow & ":M" & logRow).Interior.Color = RGB(255, 100, 100)
+
+                        With wsLog.Range("A" & logRow & ":M" & logRow).Borders
+                            .LineStyle = xlContinuous
+                            .Color = RGB(0, 0, 0)
+                            .Weight = xlThin
+                        End With
+
+                        logRow = logRow + 1
+                    End If
+SkipRow:
+                Next i
+            End If
+        End If
+    Next ws2
+
+
+    'dict sheet RESULT
+    Dim resultSheet As Worksheet: Set resultSheet = wsLog
+    Dim resultLastRow As Long: resultLastRow = resultSheet.Cells(resultSheet.Rows.Count, "D").End(xlUp).Row
+
+    For i = 3 To resultLastRow
+        Dim value As String
+        key = CleanKey(resultSheet.Cells(i, "D").value)
+        value = Trim(CStr(resultSheet.Cells(i, "M").value))
+
+        If key <> "" And value <> "" Then
+            If dict.exists(key) Then
+                Select Case value
+                    Case "Information received"
+                        dict(key) = value
+                    Case "Closed"
+                        If dict(key) <> "Information received" Then dict(key) = value
+                End Select
+            Else
+                dict(key) = value
+            End If
+        End If
+    Next i
+
+    ' fill out status in sheet bom
+    For Each ws2 In wb2.Sheets
+        If Not ws2 Is Nothing Then
+            If ws2.Range("B1").value = "Component BOM Review Sheet" Then
+                lastRow2 = ws2.Cells(ws2.Rows.Count, "E").End(xlUp).Row
+                startRow = 41
+                Do While ws2.Cells(startRow, "E").value = "" And startRow < lastRow2
+                    startRow = startRow + 1
+                Loop
+
+                For i = startRow To lastRow2
+                    Dim matchKey As String
+                    matchKey = CleanKey(ws2.Cells(i, "E").text)
+                    If matchKey = "" Then GoTo SkipRow
+
+                        Dim status As String
+                        If dict.exists(matchKey) Then
+                            status = dict(matchKey)
+                        Else
+                            status = ""
+                        End If
+
+                        If status = "Information received" Or status = "Closed" Then
+                            ws2.Cells(i, "AD").value = status
+                            ws2.Cells(i, "AE").value = Format(Date, "yyyy/mm/dd") & "_" & userName & vbCrLf & "This components is not new type. Low risk."
+                        Else
+                            If ws2.Cells(i, "AD").value = "" Then ws2.Cells(i, "AD").value = "Waiting for Information"
+                            If ws2.Cells(i, "AE").value = "" Then
+                                Dim partType As String, commentText As String
+                                partType = ws2.Cells(i, "C").value
+
+                                Select Case partType
+                                    Case "IC", "ASIC", "Tr"
+                                        commentText = Format(Date, "yyyy/mm/dd") & "_" & userName & vbCrLf & _
+                                            "This components is new series as Nissan." & vbCrLf & _
+                                            "We need to confirm the qualification level for automotive. Please submit the data as follows." & vbCrLf & _
+                                            "1. Datasheet" & vbCrLf & "2. Reliability test result of AEC-Q." & vbCrLf & "3. Failure rate" & vbCrLf & _
+                                            "4. Quality Control Plan and final test" & vbCrLf & "To clarify the final test menu & condition." & vbCrLf & _
+                                            "5. AC/DC Characteristic performance on 3 operating temperature" & vbCrLf & _
+                                            "6. Test Coverage" & vbCrLf & "Digital ? %, Analog ? %" & vbCrLf & _
+                                            "7. Tj(?) on worst condition" & vbCrLf & _
+                                            "Please inform the calculation result of Tj(?) on worst condition." & vbCrLf & _
+                                            "Worst condition means Ta_Max, Maximum_Power(V/I)"
+                                    Case "LED"
+                                        commentText = Format(Date, "yyyy/mm/dd") & "_" & userName & vbCrLf & _
+                                            "This components is new series as Nissan." & vbCrLf & _
+                                            "We need to confirm the qualification level for automotive. Please submit the data as follows." & vbCrLf & _
+                                            "1. Datasheet" & vbCrLf & "2. Reliability test result of AEC-Q." & vbCrLf & _
+                                            "To include H3S gas corrosion test result."
+                                    Case Else
+                                        commentText = Format(Date, "yyyy/mm/dd") & "_" & userName & vbCrLf & _
+                                            "This components is new series as Nissan." & vbCrLf & _
+                                            "We need to confirm the qualification level for automotive. Please submit the data as follows." & vbCrLf & _
+                                            "1. Datasheet" & vbCrLf & "2. Reliability test result of AEC-Q."
+                                End Select
+
+                                ws2.Cells(i, "AE").value = commentText
+                            End If
+                        End If
+                    Next i
+                End If
+            End If
+        
+    Next ws2
+
+    wsLog.Columns("A:M").AutoFit
+
+    'Fill out information
+    Dim targetRow As Long
+    Dim currentDate As String
+    Dim companyName As String
+    Dim commentText1 As String
+    
+    ' Information of sheet
+    currentDate = Format(Date, "yyyy/mm/dd")
+    companyName = "Nissan"
+    commentText1 = "Updated comment"
+    
+    'Check sheet have B1 = "Component BOM Review Sheet"
+    For Each ws2 In wb2.Sheets
+        If Not ws2 Is Nothing Then
+            If ws2.Range("B1").value = "Component BOM Review Sheet" Then
+                
+                ' Find empty row
+                targetRow = 10
+                Do While Not IsEmpty(ws2.Cells(targetRow, "C")) Or _
+                          Not IsEmpty(ws2.Cells(targetRow, "E")) Or _
+                          Not IsEmpty(ws2.Cells(targetRow, "F")) Or _
+                          Not IsEmpty(ws2.Cells(targetRow, "H"))
+                    targetRow = targetRow + 1
+                Loop
+                ws2.Cells(targetRow, "C").value = currentDate
+                If IsEmpty(ws2.Cells(targetRow, "E")) Then ws2.Cells(targetRow, "E").value = companyName
+                If IsEmpty(ws2.Cells(targetRow, "F")) Then ws2.Cells(targetRow, "F").value = userName
+                If IsEmpty(ws2.Cells(targetRow, "H")) Then ws2.Cells(targetRow, "H").value = commentText1
+                ws2.Cells(targetRow, "E").HorizontalAlignment = xlCenter
+                
+            End If
+        End If
+    Next ws2
+
+    ' Save new file
+    todayStr = Format(Date, "yyyy-mm-dd")
+    fileName = Dir(file2Path)
+    folderPath = Left(file2Path, InStrRev(file2Path, "\"))
+    fileName = Replace(fileName, ".xlsm", "")
+    fileName = Replace(fileName, ".xlsx", "")
+    fileName = Replace(fileName, ".xls", "")
+    Set regex = CreateObject("VBScript.RegExp")
+    With regex
+        .Global = True
+        .IgnoreCase = True
+        .Pattern = "(\d{4}[-/]\d{2}[-/]\d{2})|(\d{2}[-/]\d{2}[-/]\d{4})|(\d{8})"
+        fileName = .Replace(fileName, "")
+    End With
+
+    newFileName = Trim(fileName) & "_" & todayStr & ".xlsx"
+    wb2.SaveAs fileName:=folderPath & newFileName, FileFormat:=xlOpenXMLWorkbook
+    wb2.Close SaveChanges:=False
+    wb1.Close SaveChanges:=False
+    Application.DisplayAlerts = True
+
+Cleanup:
+    Application.ScreenUpdating = True
+    Application.Calculation = xlCalculationAutomatic
+    Application.EnableEvents = True
+    MsgBox "Done!", vbInformation
+End Sub
+
